@@ -19,32 +19,67 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-_graphical_environment_runtime_setup() {
+_startx() {
   local \
-    _chroot="${1}" \
-    _paths=()
-  _paths+=(
-    '/run/dbus'
-    '/run/udev'
+    _user="${1}" \
+    _tty="${2}" \
+    _cmd=() \
+    _msg=()
+  if (( EUID == 0 )); then
+    _msg=(
+      "${app_name} must be run as user."
+    )
+    echo \
+      "${_msg[*]}"
+    return \
+      1
+  fi
+  _cmd+=(
+    "startx"
   )
-  for _path in "${_paths[@]}"; do
-    mount \
-      -o \
-        bind \
-      "${_paths}" \
-      "${_chroot}${_path}"
-  done
+  su \
+    -c \
+      "${_cmd[*]}" - \
+    user &
 }
 
-chroot_path="/mnt"
+_components_start_delayed() {
+  local \
+    _sleep="${1}"
+  sleep \
+    "${_sleep}"
+  xfwm4 \
+    --replace &
+  xfwm4-panel &
+}
+
+_graphical_environment_start() {
+  local \
+    _user="${1}" \
+    _tty="${2}" \
+    _display=0
+  export \
+    DISPLAY="${_display}"
+  _startx \
+    "${_user}" \
+    "${_tty}"
+  _components_start_delayed \
+    "15"
+}
+
+target_user="user"
 if (( 0 < "${#}" )); then
-  chroot_path="${1}"
+  target_user="${1}"
+fi
+target_tty="/dev/tty0"
+if (( 1 < "${#}" )); then
+  target_tty="${2}"
 fi
 
 app_opts=(
-  "${chroot_path}"
+  "${target_user}"
+  "${target_tty}"
 )
 
-_graphical_environment_runtime_setup \
+_graphical_environment_start \
   "${app_opts[@]}"
