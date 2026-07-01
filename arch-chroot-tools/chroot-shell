@@ -163,6 +163,19 @@ _displays_find() {
   )
 }
 
+_backlights_find() {
+  _backlights=( $(
+    find \
+      "/sys/class/backlight" \
+      -maxdepth \
+        1 \
+      -type \
+        "l" \
+      -exec \
+        realpath {} \;)
+  )
+}
+
 _inputs_find() {
   _inputs=( $(
     find \
@@ -193,6 +206,7 @@ _devices_find() {
   if [[ "${_video_enable}" == "y" ]]; then
     _video_cards_find
     _displays_find
+    _backlights_find
   fi
 }
 
@@ -244,6 +258,16 @@ _systemd_nspawn_start() {
       # "--property=DeviceAllow='"/dev/dri/renderD128 rw"'"
       # --property=DeviceAllow=\"char-drm rw\"
     )
+    for _display in "${_displays[@]}"; do
+      _systemd_nspawn_opts+=(
+        --bind="${_display}"
+      )
+    done
+    for _backlight in "${_backlights[@]}"; do
+      _systemd_nspawn_opts+=(
+        --bind="${_backlight}"
+      )
+    done
   fi
   if [[ "${_sound_enable}" == "y" ]]; then
     _systemd_nspawn_opts+=(
@@ -285,11 +309,6 @@ _systemd_nspawn_start() {
       --bind="/dev/md"
     )
   fi
-  for _display in "${_displays[@]}"; do
-    _systemd_nspawn_opts+=(
-      --bind="${_display}"
-    )
-  done
   _systemd_nspawn_opts+=(
     --hostname="${_hostname}"
   )
