@@ -27,7 +27,7 @@ chroot-shell
 
 
 ------------------------------------------------------------------
-Open and enter a systemd-nspawn container
+Open and enter an host container
 ------------------------------------------------------------------
 :Version: chroot-shell |version|
 :Manual section: 1
@@ -36,28 +36,45 @@ Open and enter a systemd-nspawn container
 Synopsis
 ========
 
-chroot-shell *directory*
+chroot-shell *[options]* *host-directory*
 
 
 Description
 ===========
 
-Setups and runs a systemd-nspawn container
-in which a system-in-a-directory can run.
+Open an host environment, either
+using 'systemd-nspawn' or 'arch-chroot'.
 
-I'm not sure the argument really works because
-systemd-nspawn does really seems a quirky
-program which does whatever it wants
-so be sure to run the program from the root
-directory of the system you're about to run
+I'm not sure the *host-directory* argument
+really works so in case run the program
+from the host directory directly
 just in case.
 
 
 Options
 =======
 
+-t                      Chroot type, can be 'chroot'
+                        or 'systemd-nspawn'
+
+
+Systemd-nspawn specific options
+==================================
+
+-r y\/n                 Whether to enable support for RAID devices.
+
+-s y\/n                 Whether to enable support for sound devices.
+
+-g y\/n                 Whether to enable support for video devices.
+
+-k y\/n                 Whether to enable virtualization support.
+
+
+Application options
+=====================
+
 -h                      Displays help.
--c                      Enable color output
+
 -v                      Enable verbose output
 
 
