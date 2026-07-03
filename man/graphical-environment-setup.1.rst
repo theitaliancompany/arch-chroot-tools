@@ -22,21 +22,21 @@
 
 
 =====================================
-graphical-environment-runtime-setup
+graphical-environment-setup
 =====================================
 
 
 ------------------------------------------------------------------------------------
-Graphical environment runtime setup for vanilla Archiso systems
+Graphical environment setup for vanilla Archiso systems
 ------------------------------------------------------------------------------------
-:Version: graphical-environment-runtime-setup |version|
+:Version: graphical-environment-setup |version|
 :Manual section: 1
 
 
 Synopsis
 ========
 
-graphical-environment-runtime-setup *[options]*
+graphical-environment-setup *[options]*
 
 
 Description

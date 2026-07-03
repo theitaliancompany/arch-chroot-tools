@@ -356,9 +356,12 @@ _systemd_nspawn_start() {
 
 _chroot_start() {
   local \
-    _chroot_path="${1}"
-  graphical-environment-setup \
-    "${_chroot_path}"
+    _chroot_path="${1}" \
+    _video_enable="${2}"
+  if [[ "${_video_enable}" == "y" ]]; then
+    graphical-environment-setup \
+      "${_chroot_path}"
+  fi
   arch-chroot \
     "${_chroot_path}"
 }
@@ -373,8 +376,9 @@ _chroot_shell() {
     _virt_enable="${6}" \
     _msg=()
   if [[ "${_chroot_type}" == "chroot" ]]; then
-  _chroot_start \
-    "${_chroot_path}"
+    _chroot_start \
+      "${_chroot_path}" \
+      "${_video_enable}"
   elif [[ "${_chroot_type}" == "systemd-nspawn" ]]; then
     _systemd_nspawn_start \
       "${_chroot_path}" \
