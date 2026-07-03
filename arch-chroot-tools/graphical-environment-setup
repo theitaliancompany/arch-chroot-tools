@@ -19,32 +19,146 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+_global_variables() {
+  chroot_path=""
+  quiet=""
+}
 
-_graphical_environment_runtime_setup() {
+_msg_info() {
+  local \
+    _msg=() \
+    _line
+  _msg=(
+    "$@"
+  )
+  if [[ "${quiet}" == "n" ]]; then
+    for _line \
+      in "${_msg[@]}"; do
+      _printf \
+        '[%s] INFO: %s\n' \
+        "${app_name}" \
+        "${_line}"
+    done
+  fi
+}
+
+_graphical_environment_setup() {
   local \
     _chroot="${1}" \
-    _paths=()
+    _paths=() \
+    _mountpoint \
+    _path \
+    _msg=()
   _paths+=(
     '/run/dbus'
     '/run/udev'
   )
   for _path in "${_paths[@]}"; do
-    mount \
-      -o \
-        bind \
-      "${_paths}" \
-      "${_chroot}${_path}"
+    _mountpoint="${_chroot}${_path}"
+    _mounted="$(
+      mount |
+        awk \
+          '{print $3}' |
+        grep \
+          "${_mountpoint}")"
+    if [[ "${_mounted}" == "" ]]; then
+      mount \
+        -o \
+          bind \
+        "${_path}" \
+        "${_mountpoint}"
+    else
+      _msg=(
+        "Path '${_path}' already"
+        "mounted on '${_mountpoint}'."
+      )
+      _msg_info \
+        "${_msg[*]}"
+    fi
   done
 }
 
-chroot_path="/mnt"
-if (( 0 < "${#}" )); then
+_set_overrides() {
+  if [[ "${quiet}" == "" ]]; then
+    quiet="n"
+  fi
+}
+
+_usage() {
+  local \
+    _exit="${1}" \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Extra mounts (udev and dbus) for running a graphical environment from a chroot.
+
+Usage:
+  ${app_name}
+    [options]
+    <chroot-path>
+
+  options:
+     -h                     This message.
+     -v                     Enable verbose output
+ENDUSAGETEXT
+  printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${_exit}"
+}
+
+getopts_opts="$(
+  printf \
+    "%s" \
+    "vh")"
+while \
+  getopts \
+    "${getopts_opts}" \
+    arg; do
+  case \
+    "${arg}" in
+    v)
+      quiet="n" ;;
+    h)
+      _set_overrides
+      _usage \
+        0 ;;
+    *)
+      if [[ " ${getopts_opts} " != *"${arg}"* ]]; then
+        _msg=(
+          "Invalid argument '${arg}'."
+        )
+        _msg_error \
+          "${_msg[*]}" \
+          0
+        _usage \
+          1
+      fi ;;
+  esac
+done
+shift $((
+  OPTIND - 1 ))
+if (( "${#}" < 1 )); then
+  _msg=(
+    "Setting '/mnt' as"
+    "argument."
+  )
+  _msg_info \
+    "${_msg[*]}"
+  chroot_path="/mnt"
+elif (( 0 < "${#}" )); then
   chroot_path="${1}"
 fi
-
+_set_overrides
 app_opts=(
   "${chroot_path}"
 )
 
-_graphical_environment_runtime_setup \
+_graphical_environment_setup \
   "${app_opts[@]}"

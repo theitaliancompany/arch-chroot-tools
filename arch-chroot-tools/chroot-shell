@@ -357,6 +357,8 @@ _systemd_nspawn_start() {
 _chroot_start() {
   local \
     _chroot_path="${1}"
+  graphical-environment-setup \
+    "${_chroot_path}"
   arch-chroot \
     "${_chroot_path}"
 }
